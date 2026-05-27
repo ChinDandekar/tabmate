@@ -1,11 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { store } from '../lib/store';
 import { getInitials, formatCurrency } from '../lib/utils';
 
 export default function HomeScreen() {
   const navigate = useNavigate();
-  const splits = store.getSplits();
+  const [splits, setSplits] = React.useState([]);
+
+  useEffect(() => {
+    async function loadSplits() {
+      const data = await store.getSplits();
+      setSplits(data);
+    }
+    loadSplits();
+  }, []);
 
   const handleStartNewSplit = () => {
     navigate('/scan');

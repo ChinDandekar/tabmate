@@ -11,21 +11,26 @@ export default function SettingsScreen() {
   const [newContactPhone, setNewContactPhone] = useState('');
 
   useEffect(() => {
-    setOwnerSettings(store.getSettings());
-    setContacts(store.getContactsSortedByFrequency());
+    async function init() {
+      const settings = await store.getSettings();
+      const contacts = await store.getContactsSortedByFrequency();
+      setOwnerSettings(settings);
+      setContacts(contacts);
+    }
+    init();
   }, []);
 
-  const handleOwnerChange = (key, value) => {
+  const handleOwnerChange = async (key, value) => {
     let finalValue = value;
     if (key === 'venmo' && value && !value.startsWith('@')) {
       finalValue = `@${value}`;
     }
     const updated = { ...ownerSettings, [key]: finalValue };
     setOwnerSettings(updated);
-    store.saveSettings(updated);
+    await store.saveSettings(updated);
   };
 
-  const handleAddContact = (e) => {
+  const handleAddContact = async (e) => {
     if (e && e.key && e.key !== 'Enter') return;
     const name = newContactName.trim();
     const phone = newContactPhone.trim();
@@ -36,16 +41,18 @@ export default function SettingsScreen() {
       return;
     }
 
-    store.saveContact({ name, phone });
+    await store.saveContact({ name, phone });
     setNewContactName('');
     setNewContactPhone('');
-    setContacts(store.getContactsSortedByFrequency());
+    const updatedContacts = await store.getContactsSortedByFrequency();
+    setContacts(updatedContacts);
   };
 
-  const handleDeleteContact = (id, name) => {
+  const handleDeleteContact = async (id, name) => {
     if (confirm(`Are you sure you want to delete ${name} from your saved library?`)) {
-      store.deleteContact(id);
-      setContacts(store.getContactsSortedByFrequency());
+      await store.deleteContact(id);
+      const updated = await store.getContactsSortedByFrequency();
+      setContacts(updated);
     }
   };
 

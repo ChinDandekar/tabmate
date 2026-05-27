@@ -13,32 +13,34 @@ export default function PeopleScreen() {
   const [frequentContacts, setFrequentContacts] = useState([]);
 
   useEffect(() => {
-    // Sync frequent contacts list
-    setFrequentContacts(store.getContactsSortedByFrequency());
+    async function init() {
+      const contacts = await store.getContactsSortedByFrequency();
+      setFrequentContacts(contacts);
 
-    // Auto-include the owner if they have a name in Settings
-    const settings = store.getSettings();
-    const ownerName = (settings.name || '').trim();
-    if (ownerName) {
-      const already = splitState.people.some(
-        p => p.contactId === 'me_owner' || p.name.toLowerCase() === ownerName.toLowerCase()
-      );
-      if (!already) {
-        setSplitState(prev => ({
-          ...prev,
-          people: [
-            {
-              contactId: 'me_owner',
-              name: ownerName,
-              phone: '',
-              color: generateColor(ownerName, 0),
-              isOwner: true
-            },
-            ...prev.people
-          ]
-        }));
+      const settings = await store.getSettings();
+      const ownerName = (settings.name || '').trim();
+      if (ownerName) {
+        const already = splitState.people.some(
+          p => p.contactId === 'me_owner' || p.name.toLowerCase() === ownerName.toLowerCase()
+        );
+        if (!already) {
+          setSplitState(prev => ({
+            ...prev,
+            people: [
+              {
+                contactId: 'me_owner',
+                name: ownerName,
+                phone: '',
+                color: generateColor(ownerName, 0),
+                isOwner: true
+              },
+              ...prev.people
+            ]
+          }));
+        }
       }
     }
+    init();
   }, []);
 
   const handleAddPerson = (e) => {
@@ -103,19 +105,19 @@ export default function PeopleScreen() {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     // Save participants to database if they don't exist
-    splitState.people.forEach(p => {
-      const contacts = store.getContacts();
+    for (const p of splitState.people) {
+      const contacts = await store.getContacts();
       const exists = contacts.some(c => c.name.toLowerCase() === p.name.toLowerCase());
       if (!exists) {
-        store.saveContact({
+        await store.saveContact({
           name: p.name,
           phone: p.phone,
           color: p.color
         });
       }
-    });
+    }
     navigate('/assign');
   };
 

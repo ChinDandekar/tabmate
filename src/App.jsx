@@ -113,15 +113,17 @@ function MainRoutes() {
   const location = useLocation();
 
   useEffect(() => {
-    // Verify first run (prompt to settings if owner Venmo is blank)
-    const settings = store.getSettings();
-    if (!settings.venmo && !settings.zelle) {
-      if (location.pathname !== '/settings') {
-        navigate('/settings');
+    async function init() {
+      const settings = await store.getSettings();
+      if (!settings.venmo && !settings.zelle) {
+        if (location.pathname !== '/settings') {
+          navigate('/settings');
+        }
+      } else if (location.pathname === '/') {
+        navigate('/home');
       }
-    } else if (location.pathname === '/') {
-      navigate('/home');
     }
+    init();
   }, [navigate, location]);
 
   return (

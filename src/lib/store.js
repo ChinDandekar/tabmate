@@ -1,4 +1,5 @@
 import { generateId, generateColor } from './utils.js';
+import { db } from './db.js';
 
 const KEYS = {
   settings: 'tabmate_settings',
@@ -6,39 +7,23 @@ const KEYS = {
   splits: 'tabmate_splits',
 };
 
-function _read(key) {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : null;
-  } catch (e) {
-    console.error(`Error reading ${key} from localStorage:`, e);
-    return null;
-  }
-}
-
-function _write(key, data) {
-  try {
-    localStorage.setItem(key, JSON.stringify(data));
-  } catch (e) {
-    console.error(`Error writing ${key} to localStorage:`, e);
-  }
-}
-
 export const store = {
-  // -- Settings --
-  getSettings() {
-    return _read(KEYS.settings) || { venmo: '', zelle: '', name: '' };
+  // Settings
+  async getSettings() {
+    const data = await db.get(KEYS.settings);
+    return data || { venmo: '', zelle: '', name: '' };
   },
-  saveSettings(obj) {
-    _write(KEYS.settings, obj);
+  async saveSettings(obj) {
+    await db.set(KEYS.settings, obj);
   },
 
-  // -- Contacts --
-  getContacts() {
-    return _read(KEYS.contacts) || [];
+  // Contacts
+  async getContacts() {
+    const data = await db.get(KEYS.contacts);
+    return data || [];
   },
-  saveContact(contact) {
-    const contacts = this.getContacts();
+  async saveContact(contact) {
+    const contacts = await this.getContacts();
     const idx = contacts.findIndex((c) => c.id === contact.id);
     if (idx >= 0) {
       contacts[idx] = { ...contacts[idx], ...contact };
@@ -51,66 +36,69 @@ export const store = {
         color: contact.color || generateColor(contact.name, contacts.length),
       });
     }
-    _write(KEYS.contacts, contacts);
+    await db.set(KEYS.contacts, contacts);
     return contacts;
   },
-  deleteContact(id) {
-    const contacts = this.getContacts().filter((c) => c.id !== id);
-    _write(KEYS.contacts, contacts);
-    return contacts;
+  async deleteContact(id) {
+    const contacts = await this.getContacts();
+    const filtered = contacts.filter((c) => c.id !== id);
+    await db.set(KEYS.contacts, filtered);
+    return filtered;
   },
-  bumpContactSplitCount(id) {
-    const contacts = this.getContacts();
+  async bumpContactSplitCount(id) {
+    const contacts = await this.getContacts();
     const contact = contacts.find((c) => c.id === id);
     if (contact) {
       contact.splitCount = (contact.splitCount || 0) + 1;
-      _write(KEYS.contacts, contacts);
+      await db.set(KEYS.contacts, contacts);
     }
     return contact;
   },
-  getContactsSortedByFrequency() {
-    return this.getContacts().sort((a, b) => (b.splitCount || 0) - (a.splitCount || 0));
+  async getContactsSortedByFrequency() {
+    const contacts = await this.getContacts();
+    return contacts.sort((a, b) => (b.splitCount || 0) - (a.splitCount || 0));
   },
 
-  // -- Splits --
-  getSplits() {
-    return _read(KEYS.splits) || [];
+  // Splits
+  async getSplits() {
+    const data = await db.get(KEYS.splits);
+    return data || [];
   },
-  saveSplit(split) {
-    const splits = this.getSplits();
+  async saveSplit(split) {
+    const splits = await this.getSplits();
     split.id = split.id || generateId('s_');
     split.date = split.date || new Date().toISOString().split('T')[0];
-    
-    // Check if updating or adding new
-    const idx = splits.findIndex(s => s.id === split.id);
+    const idx = splits.findIndex((s) => s.id === split.id);
     if (idx >= 0) {
       splits[idx] = split;
     } else {
-      splits.unshift(split); // newest first
+      splits.unshift(split);
     }
-    _write(KEYS.splits, splits);
+    await db.set(KEYS.splits, splits);
     return split;
   },
-  getSplitById(id) {
-    return this.getSplits().find((s) => s.id === id) || null;
+  async getSplitById(id) {
+    const splits = await this.getSplits();
+    return splits.find((s) => s.id === id) || null;
   },
-  markPaid(splitId, contactId) {
-    const splits = this.getSplits();
+  async markPaid(splitId, contactId) {
+    const splits = await this.getSplits();
     const split = splits.find((s) => s.id === splitId);
     if (!split) return null;
     if (!split.paid) split.paid = [];
     const idx = split.paid.indexOf(contactId);
     if (idx >= 0) {
-      split.paid.splice(idx, 1); // toggle off
+      split.paid.splice(idx, 1);
     } else {
-      split.paid.push(contactId); // toggle on
+      split.paid.push(contactId);
     }
-    _write(KEYS.splits, splits);
+    await db.set(KEYS.splits, splits);
     return split;
   },
-  deleteSplit(id) {
-    const splits = this.getSplits().filter((s) => s.id !== id);
-    _write(KEYS.splits, splits);
-    return splits;
+  async deleteSplit(id) {
+    const splits = await this.getSplits();
+    const filtered = splits.filter((s) => s.id !== id);
+    await db.set(KEYS.splits, filtered);
+    return filtered;
   },
 };

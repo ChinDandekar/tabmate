@@ -101,8 +101,8 @@ export default function SummaryScreen() {
     setComputedPeople(personList);
   };
 
-  const handleSendImsMessage = (person) => {
-    const settings = store.getSettings();
+  const handleSendImsMessage = async (person) => {
+    const settings = await store.getSettings();
     const rest = splitState.restaurant || 'dinner';
 
     let body = `Hey ${person.name}! From ${rest} 🍽️\n`;

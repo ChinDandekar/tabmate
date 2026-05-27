@@ -21,8 +21,8 @@ export default function SplitDetailScreen() {
     setSplit(data);
   };
 
-  const handleTogglePaid = (personId) => {
-    const updated = store.markPaid(splitId, personId);
+  const handleTogglePaid = async (personId) => {
+    const updated = await store.markPaid(splitId, personId);
     if (updated) {
       setSplit({ ...updated });
     }
