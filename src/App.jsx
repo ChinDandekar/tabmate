@@ -41,7 +41,7 @@ function Header() {
   ];
 
   return (
-    <header className="border-b bg-card-60 backdrop-blur-sm sticky top-0 z-10">
+    <header className="border-b bg-card-60 backdrop-blur-sm sticky top-[env(safe-area-inset-top)] z-10 pt-[env(safe-area-inset-top)]">
       <div className="max-w-xl mx-auto px-5 py-3 flex items-center justify-between">
         {/* Logo/Brand Button */}
         <button onClick={handleLogoClick} className="flex items-center gap-25 hover:opacity-90" aria-label="Go to Home Screen" id="header-logo-btn">
