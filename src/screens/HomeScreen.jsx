@@ -47,7 +47,6 @@ export default function HomeScreen() {
               <path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
             </svg>
             <p className="text-sm font-medium mb-1 font-serif">No splits recorded yet</p>
-            <p className="text-xs">Tap "Start New Split" to divide a dining check.</p>
           </div>
         ) : (
           splits.map((split) => {

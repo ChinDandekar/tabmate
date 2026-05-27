@@ -1,19 +1,10 @@
 import { generateId, round2 } from './utils.js';
 
-const GEMINI_ENDPOINT =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+const GEMINI_MODEL = 'gemini-3-flash-preview';
 
 const SYSTEM_PROMPT = `
 You are a receipt parser. Extract all line items, tax, tip, subtotal,
-and restaurant name from the receipt text provided. Return ONLY a JSON
-object with this exact shape, no markdown, no explanation:
-{
-  "restaurantName": "",
-  "items": [{ "name": "", "price": 0.00 }],
-  "subtotal": 0.00,
-  "tax": 0.00,
-  "tip": 0.00
-}
+and restaurant name from the receipt text provided.
 Rules:
 - item prices are the final line price (e.g. 2x Burger $18 -> price: 18.00)
 - exclude subtotal, tax, tip, and total rows from items[]
@@ -33,28 +24,27 @@ export async function parseReceiptWithGemini(text, apiKey) {
     throw Object.assign(new Error('Gemini API key is required.'), { code: 'MISSING_API_KEY' });
   }
 
-  let res;
+  let response;
   try {
-    res = await fetch(`${GEMINI_ENDPOINT}?key=${encodeURIComponent(cleanedApiKey)}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: `${SYSTEM_PROMPT}\n\nReceipt:\n${cleanedText}` }] }]
-      })
+    const { GoogleGenAI, Type } = await import('@google/genai');
+    const ai = new GoogleGenAI({ apiKey: cleanedApiKey });
+    response = await ai.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: `${SYSTEM_PROMPT}\n\nReceipt:\n${cleanedText}`,
+      config: {
+        responseMimeType: 'application/json',
+        responseJsonSchema: createReceiptSchema(Type),
+      },
     });
   } catch (err) {
-    throw Object.assign(new Error("Couldn't reach Gemini. Check your connection."), {
-      code: 'NETWORK_ERROR',
+    throw Object.assign(new Error(getGeminiErrorMessage(err)), {
+      code: err?.status ? 'API_ERROR' : 'NETWORK_ERROR',
+      status: err?.status,
       cause: err,
     });
   }
 
-  if (!res.ok) {
-    throw Object.assign(new Error(`Gemini API error: ${res.status}`), { code: 'API_ERROR' });
-  }
-
-  const data = await res.json();
-  const raw = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+  const raw = response.text ?? '';
 
   try {
     return normalizeGeminiReceipt(JSON.parse(stripJsonFence(raw)));
@@ -64,6 +54,53 @@ export async function parseReceiptWithGemini(text, apiKey) {
       cause: err,
     });
   }
+}
+
+function createReceiptSchema(Type) {
+  return {
+    type: Type.OBJECT,
+    properties: {
+      restaurantName: {
+        type: Type.STRING,
+        description: 'Restaurant name, or an empty string if not present.',
+      },
+      items: {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            name: {
+              type: Type.STRING,
+              description: 'Line item name.',
+            },
+            price: {
+              type: Type.NUMBER,
+              description: 'Final line price for the item.',
+            },
+          },
+          propertyOrdering: ['name', 'price'],
+        },
+      },
+      subtotal: {
+        type: Type.NUMBER,
+        description: 'Receipt subtotal, or 0 if not present.',
+      },
+      tax: {
+        type: Type.NUMBER,
+        description: 'Receipt tax, or 0 if not present.',
+      },
+      tip: {
+        type: Type.NUMBER,
+        description: 'Receipt tip or gratuity, or 0 if not present.',
+      },
+    },
+    propertyOrdering: ['restaurantName', 'items', 'subtotal', 'tax', 'tip'],
+  };
+}
+
+function getGeminiErrorMessage(err) {
+  if (err?.status) return `Gemini API error: ${err.status}`;
+  return "Couldn't reach Gemini. Check your connection.";
 }
 
 function stripJsonFence(raw) {
