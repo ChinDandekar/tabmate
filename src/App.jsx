@@ -142,7 +142,7 @@ function MainRoutes() {
 
 export default function App() {
   return (
-    <div className="bg-background text-foreground min-h-screen flex flex-col">
+    <div className="bg-background text-foreground min-h-screen flex flex-col pt-20">
       <Header />
       <MainRoutes />
     </div>
