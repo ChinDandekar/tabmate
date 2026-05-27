@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>TabMate — Split the bill</title>
+  
+  <!-- SEO & Socials -->
+  <meta name="description" content="Split your dining bill instantly with friends. OCR receipt scanning, custom contacts, and pre-filled iMessages. No backend or login required.">
+  <meta name="theme-color" content="#4A6741">
+  
+  <!-- Apple Home Screen Support (PWA) -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TabMate">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+</head>
+<body class="bg-background text-foreground">
+
+  <!-- Header -->
+  <header class="border-b bg-card-60 backdrop-blur-sm sticky top-0 z-10">
+    <div class="max-w-xl mx-auto px-5 py-3 flex items-center justify-between">
+      
+      <!-- Brand Logo / Header Left -->
+      <button id="header-logo-btn" class="flex items-center gap-25 hover:opacity-90" aria-label="Go to Home Screen">
+        <div class="w-7 h-7 bg-primary rounded-md flex items-center justify-center">
+          <!-- Inline SVG Receipt Icon -->
+          <svg class="w-35 h-35 text-primary-foreground" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/>
+            <path d="M16 8H8"/>
+            <path d="M16 12H8"/>
+            <path d="M13 16H8"/>
+          </svg>
+        </div>
+        <span class="text-base font-semibold tracking-tight font-serif" id="app-title-display">TabMate</span>
+      </button>
+
+      <!-- Active Wizard Step Navigator (shown during splits) -->
+      <nav id="wizard-nav" class="flex items-center gap-05" style="display: none;">
+        <!-- Step 1: Receipt -->
+        <button id="nav-step-receipt" class="text-xs px-25 py-1 rounded-md transition-all font-medium text-foreground/30" disabled>Receipt</button>
+        <svg class="w-3 h-3 text-muted-foreground/30 mx-05 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m9 18 6-6-6-6"/>
+        </svg>
+
+        <!-- Step 2: People -->
+        <button id="nav-step-people" class="text-xs px-25 py-1 rounded-md transition-all font-medium text-foreground/30" disabled>People</button>
+        <svg class="w-3 h-3 text-muted-foreground/30 mx-05 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m9 18 6-6-6-6"/>
+        </svg>
+
+        <!-- Step 3: Assign -->
+        <button id="nav-step-assign" class="text-xs px-25 py-1 rounded-md transition-all font-medium text-foreground/30" disabled>Assign</button>
+        <svg class="w-3 h-3 text-muted-foreground/30 mx-05 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m9 18 6-6-6-6"/>
+        </svg>
+
+        <!-- Step 4: Summary -->
+        <button id="nav-step-summary" class="text-xs px-25 py-1 rounded-md transition-all font-medium text-foreground/30" disabled>Summary</button>
+      </nav>
+
+      <!-- Settings Button (Home Screen View) -->
+      <button id="home-settings-btn" class="text-muted-foreground hover:text-foreground transition-colors" aria-label="App Settings">
+        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+
+    </div>
+  </header>
+
+  <!-- Main View Containers -->
+  <main class="max-w-xl mx-auto px-5 py-8 pb-16">
+
+    <!-- ──────────────── SCREEN 1: HOME SCREEN ──────────────── -->
+    <div id="screen-home" class="screen-container active">
+      <div class="mb-7 flex justify-between items-end">
+        <div>
+          <h2 class="text-3xl font-normal mb-1 tracking-tight font-serif">Welcome back</h2>
+          <p class="text-sm text-muted-foreground">Select a split or start a new dining check.</p>
+        </div>
+      </div>
+
+      <!-- New Split Quick Trigger Card -->
+      <div class="border border-border rounded-xl p-4 bg-card mb-6 flex flex-col gap-3">
+        <button id="home-new-split-btn" class="w-full bg-primary text-primary-foreground py-35 rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+          <!-- Inline Plus Icon -->
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/><path d="M12 5v14"/>
+          </svg>
+          Start New Split
+        </button>
+      </div>
+
+      <!-- Splits History Section -->
+      <h3 class="text-lg font-normal mb-3 font-serif">Recent splits</h3>
+      <div id="splits-history-list" class="space-y-2">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- ──────────────── SCREEN 2: SCAN/CAMERA ──────────────── -->
+    <div id="screen-scan" class="screen-container">
+      <div class="mb-7">
+        <h2 class="text-3xl font-normal mb-1 tracking-tight font-serif">Scan receipt</h2>
+        <p class="text-sm text-muted-foreground">Take a receipt image to automatically extract items and amounts.</p>
+      </div>
+
+      <div class="scan-preview-box mb-4 flex flex-col items-center justify-center text-muted-foreground border">
+        <!-- Camera view or chosen image preview container -->
+        <div id="camera-placeholder" class="flex flex-col items-center gap-3">
+          <svg class="w-9 h-9 opacity-30 text-foreground" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+            <circle cx="12" cy="13" r="3"/>
+          </svg>
+          <span class="text-xs">No image selected</span>
+        </div>
+        <img id="scan-preview-img" style="display: none;" alt="Receipt Preview">
+      </div>
+
+      <!-- Loading / Progress bar (during OCR) -->
+      <div id="ocr-progress-container" class="mb-4" style="display: none;">
+        <div class="flex justify-between items-center text-xs mb-1.5 font-mono text-muted-foreground">
+          <span id="ocr-status-label">Reading receipt text...</span>
+          <span id="ocr-status-pct">0%</span>
+        </div>
+        <div class="w-full bg-secondary rounded-full overflow-hidden" style="height: 4px;">
+          <div id="ocr-progress-fill" class="scan-progress-bar"></div>
+        </div>
+      </div>
+
+      <!-- Quick Action Controls -->
+      <div class="flex flex-col gap-3 mb-6">
+        <!-- Capture environment file trigger for live cameras -->
+        <input type="file" id="camera-file-input" accept="image/*" capture="environment" style="display: none;">
+        <button id="scan-snap-photo-btn" class="w-full bg-primary text-primary-foreground py-35 rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+          Take Photo
+        </button>
+
+        <input type="file" id="gallery-file-input" accept="image/*" style="display: none;">
+        <button id="scan-upload-photo-btn" class="w-full border border-border py-35 rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-muted transition-colors bg-card">
+          Upload from Library
+        </button>
+      </div>
+
+      <div class="flex gap-3">
+        <button id="scan-back-btn" class="flex-1 border border-border py-35 rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-muted transition-colors bg-card">
+          Cancel
+        </button>
+        <button id="scan-skip-btn" class="flex-1 bg-secondary text-foreground py-35 rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+          Enter Manually
+        </button>
+      </div>
+    </div>
+
+    <!-- ──────────────── SCREEN 3: RECEIPT STEP (Edit Items) ──────────────── -->
+    <div id="screen-editItems" class="screen-container">
+      <div class="mb-7">
+        <h2 class="text-3xl font-normal mb-1 tracking-tight font-serif">Your receipt</h2>
+        <p class="text-sm text-muted-foreground">Edit items, set tax & tip.</p>
+      </div>
+
+      <!-- Restaurant Label Entry -->
+      <div class="mb-4">
+        <input type="text" id="split-restaurant-name" placeholder="Restaurant Name (e.g. Nobu)" class="w-full border border-border rounded-xl px-4 py-3 text-sm bg-card font-medium focus:ring-1 focus:ring-accent/40 focus:outline-none transition-shadow">
+      </div>
+
+      <!-- Items Table -->
+      <div class="border border-border rounded-xl overflow-hidden bg-card mb-3">
+        
+        <!-- Table Header -->
+        <div class="grid grid-cols-[1fr_7rem_2rem] items-center px-4 py-25 border-b bg-muted-40">
+          <span class="text-xs uppercase tracking-widest text-muted-foreground font-mono">Item</span>
+          <span class="text-xs uppercase tracking-widest text-muted-foreground text-right pr-2 font-mono">Price</span>
+          <span></span>
+        </div>
+
+        <!-- Dynamic Items Container -->
+        <div id="ocr-items-list">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <!-- Add Item Row -->
+        <div class="grid grid-cols-[1fr_7rem_2rem] items-center px-4 py-3 border-t border-dashed bg-muted-20">
+          <input type="text" id="new-item-name" placeholder="Add item…" class="bg-transparent text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none w-full">
+          <div class="flex items-center justify-end gap-05">
+            <span class="text-xs text-muted-foreground font-mono">$</span>
+            <input type="number" id="new-item-price" step="0.01" min="0" placeholder="0.00" class="bg-transparent text-sm text-right focus:outline-none w-16 placeholder:text-muted-foreground/40 font-mono">
+          </div>
+          <button id="add-item-row-btn" class="text-muted-foreground hover:text-foreground transition-colors flex justify-end" aria-label="Confirm new item line">
+            <svg class="w-35 h-35" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14"/><path d="M12 5v14"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tax & Tip Dual Inputs -->
+      <div class="border border-border rounded-xl overflow-hidden bg-card mb-3">
+        <div class="grid grid-cols-2 divide-x">
+          
+          <!-- Tax Input -->
+          <div class="px-4 py-3">
+            <label for="tax-percent-input" class="text-xs uppercase tracking-widest text-muted-foreground block mb-15 font-mono">Tax</label>
+            <div class="flex items-center gap-1">
+              <input type="number" id="tax-percent-input" step="0.001" min="0" value="8.875" class="bg-transparent text-sm focus:outline-none w-14 font-mono">
+              <span class="text-sm text-muted-foreground">%</span>
+            </div>
+          </div>
+
+          <!-- Tip Input -->
+          <div class="px-4 py-3">
+            <label for="tip-percent-input" class="text-xs uppercase tracking-widest text-muted-foreground block mb-15 font-mono">Tip</label>
+            <div class="flex items-center gap-1">
+              <input type="number" id="tip-percent-input" step="1" min="0" value="20" class="bg-transparent text-sm focus:outline-none w-14 font-mono">
+              <span class="text-sm text-muted-foreground">%</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Receipt Summary Block -->
+      <div class="border border-border rounded-xl overflow-hidden bg-card mb-7">
+        <div class="flex justify-between items-center px-4 py-25 border-b border-border-60">
+          <span class="text-xs text-muted-foreground font-mono">Subtotal</span>
+          <span id="receipt-subtotal-display" class="text-sm text-muted-foreground font-mono">$0.00</span>
+        </div>
+        <div class="flex justify-between items-center px-4 py-25 border-b border-border-60">
+          <span id="receipt-tax-label" class="text-xs text-muted-foreground font-mono">Tax (8.875%)</span>
+          <span id="receipt-tax-display" class="text-sm text-muted-foreground font-mono">$0.00</span>
+        </div>
+        <div class="flex justify-between items-center px-4 py-25 border-b border-border-60">
+          <span id="receipt-tip-label" class="text-xs text-muted-foreground font-mono">Tip (20%)</span>
+          <span id="receipt-tip-display" class="text-sm text-muted-foreground font-mono">$0.00</span>
+        </div>
+        <div class="flex justify-between items-center px-4 py-3">
+          <span class="text-sm font-semibold font-serif">Total</span>
+          <span id="receipt-total-display" class="text-lg font-medium font-mono">$0.00</span>
+        </div>
+      </div>
+
+      <!-- Navigation Footers -->
+      <button id="editItems-next-btn" class="w-full bg-primary text-primary-foreground py-35 rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+        Continue
+        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m9 18 6-6-6-6"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- ──────────────── SCREEN 4: PEOPLE STEP (Who's splitting) ──────────────── -->
+    <div id="screen-people" class="screen-container">
+      <div class="mb-7">
+        <h2 class="text-3xl font-normal mb-1 tracking-tight font-serif">Who's splitting?</h2>
+        <p class="text-sm text-muted-foreground">Add everyone at the table.</p>
+      </div>
+
+      <!-- Empty Contacts view -->
+      <div id="contacts-empty-view" class="text-center py-12 text-muted-foreground mb-4" style="display: none;">
+        <!-- Inline Users Icon -->
+        <svg class="w-9 h-9 mx-auto mb-3 opacity-25" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <p class="text-sm">No one added to this split yet.</p>
+      </div>
+
+      <!-- Active split participants stack -->
+      <div id="split-people-list" class="space-y-2 mb-4">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Inline Addition Form -->
+      <div class="flex gap-2 mb-8">
+        <input type="text" id="inline-person-name" placeholder="Name…" class="flex-1 border border-border rounded-xl px-4 py-3 text-sm bg-card focus:outline-none focus:ring-1 focus:ring-accent/40 transition-shadow">
+        <input type="tel" id="inline-person-phone" placeholder="Phone (optional)…" class="w-1/3 border border-border rounded-xl px-4 py-3 text-sm bg-card focus:outline-none focus:ring-1 focus:ring-accent/40 transition-shadow">
+        <button id="inline-add-person-btn" class="border border-border rounded-xl px-4 py-3 text-sm bg-card hover:bg-muted transition-colors flex items-center gap-1.5">
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/><path d="M12 5v14"/>
+          </svg>
+          Add
+        </button>
+      </div>
+
+      <!-- Frequent/Saved contacts section -->
+      <h3 class="text-sm font-semibold tracking-widest text-muted-foreground uppercase mb-3 font-mono">Frequent crew</h3>
+      <div id="frequent-contacts-picker" class="flex flex-wrap gap-2 mb-8">
+        <!-- Rendered dynamically as selectable chips -->
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="flex gap-3">
+        <button id="people-back-btn" class="flex-1 border border-border py-35 rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-muted transition-colors bg-card">
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m15 18-6-6 6-6"/>
+          </svg>
+          Back
+        </button>
+        <button id="people-next-btn" class="flex-1 bg-primary text-primary-foreground py-35 rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity" disabled>
+          Assign items
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 18 6-6-6-6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ──────────────── SCREEN 5: ASSIGN STEP (Assign Items) ──────────────── -->
+    <div id="screen-assign" class="screen-container">
+      <div class="mb-7">
+        <h2 class="text-3xl font-normal mb-1 tracking-tight font-serif">Assign items</h2>
+        <p class="text-sm text-muted-foreground">Select who shares each item. Shared items split evenly.</p>
+      </div>
+
+      <!-- Unassigned Warning Alert Banner -->
+      <div id="unassigned-items-alert" class="mb-4 px-35 py-15 bg-muted border rounded-lg text-xs text-muted-foreground flex items-center gap-2 font-mono">
+        <span class="w-15 h-15 rounded-full bg-accent inline-block"></span>
+        <span id="unassigned-items-text">0 items unassigned</span>
+      </div>
+
+      <!-- Items Stack -->
+      <div id="assign-items-list" class="space-y-3 mb-8">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="flex gap-3">
+        <button id="assign-back-btn" class="flex-1 border border-border py-35 rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-muted transition-colors bg-card">
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m15 18-6-6 6-6"/>
+          </svg>
+          Back
+        </button>
+        <button id="assign-next-btn" class="flex-1 bg-primary text-primary-foreground py-35 rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+          See totals
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 18 6-6-6-6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ──────────────── SCREEN 6: SUMMARY STEP (See Totals) ──────────────── -->
+    <div id="screen-summary" class="screen-container">
+      <div class="mb-7">
+        <h2 class="text-3xl font-normal mb-1 tracking-tight font-serif">Summary</h2>
+        <p class="text-sm text-muted-foreground">
+          Total <span id="summary-total-amount" class="text-foreground font-mono">$0.00</span> including tax & tip.
+        </p>
+      </div>
+
+      <!-- Person breakdown cards list -->
+      <div id="summary-people-breakdowns" class="space-y-4 mb-6">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Any remaining unassigned warning card -->
+      <div id="summary-unassigned-card" class="border rounded-xl overflow-hidden bg-card mb-6" style="display: none;">
+        <div class="px-4 py-25 border-b bg-muted-30">
+          <span class="text-xs uppercase tracking-widest text-muted-foreground font-mono">Unassigned Items</span>
+        </div>
+        <div id="summary-unassigned-items-list" class="px-4 py-3 space-y-15">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Back navigation footer -->
+      <button id="summary-back-btn" class="w-full border border-border py-35 rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-muted transition-colors bg-card mb-3">
+        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6"/>
+        </svg>
+        Edit assignments
+      </button>
+
+      <!-- Done footer trigger -->
+      <button id="summary-done-btn" class="w-full bg-primary text-primary-foreground py-35 rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 6 9 17l-5-5"/>
+        </svg>
+        Complete Split
+      </button>
+    </div>
+
+    <!-- ──────────────── SCREEN 7: SETTINGS ──────────────── -->
+    <div id="screen-settings" class="screen-container">
+      <div class="mb-7">
+        <h2 class="text-3xl font-normal mb-1 tracking-tight font-serif">Settings</h2>
+        <p class="text-sm text-muted-foreground">Configure your default payment options and contact library.</p>
+      </div>
+
+      <!-- Owner Details -->
+      <h3 class="text-xs uppercase tracking-widest text-muted-foreground mb-3 font-mono">Your Payment Info</h3>
+      <div class="border rounded-xl overflow-hidden bg-card mb-6">
+        <div class="px-4 py-3 border-b">
+          <label for="settings-owner-name" class="text-xs uppercase tracking-widest text-muted-foreground block mb-1 font-mono">Display Name</label>
+          <input type="text" id="settings-owner-name" placeholder="Your Name" class="w-full bg-transparent text-sm focus:outline-none font-medium">
+        </div>
+        <div class="px-4 py-3 border-b">
+          <label for="settings-owner-venmo" class="text-xs uppercase tracking-widest text-muted-foreground block mb-1 font-mono">Venmo Username</label>
+          <input type="text" id="settings-owner-venmo" placeholder="@yourhandle" class="w-full bg-transparent text-sm focus:outline-none font-medium">
+        </div>
+        <div class="px-4 py-3">
+          <label for="settings-owner-zelle" class="text-xs uppercase tracking-widest text-muted-foreground block mb-1 font-mono">Zelle Phone / Email</label>
+          <input type="text" id="settings-owner-zelle" placeholder="415-555-0101" class="w-full bg-transparent text-sm focus:outline-none font-medium">
+        </div>
+      </div>
+
+      <!-- Contacts List CRUD -->
+      <h3 class="text-xs uppercase tracking-widest text-muted-foreground mb-3 font-mono">Saved contacts</h3>
+      <div class="border rounded-xl overflow-hidden bg-card mb-8">
+        
+        <!-- Add contact inline in settings -->
+        <div class="px-4 py-3 border-b bg-muted-20 flex gap-2">
+          <input type="text" id="settings-add-contact-name" placeholder="Name" class="w-1/2 bg-transparent text-sm focus:outline-none">
+          <input type="tel" id="settings-add-contact-phone" placeholder="Phone" class="w-1/2 bg-transparent text-sm focus:outline-none">
+          <button id="settings-add-contact-btn" class="text-muted-foreground hover:text-foreground transition-colors shrink-0" aria-label="Save contact to library">
+            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14"/><path d="M12 5v14"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Contacts Library container -->
+        <div id="settings-contacts-list" class="divide-y max-h-60 overflow-y-auto">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Close settings button -->
+      <button id="settings-close-btn" class="w-full bg-primary text-primary-foreground py-35 rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+        Save & Close
+      </button>
+    </div>
+
+    <!-- ──────────────── SCREEN 8: HISTORICAL DETAIL (Read-Only) ──────────────── -->
+    <div id="screen-splitDetail" class="screen-container">
+      <div class="mb-7 flex justify-between items-start">
+        <div>
+          <button id="splitDetail-back-btn" class="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 mb-2 font-mono" aria-label="Go back to Home screen">
+            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m15 18-6-6 6-6"/>
+            </svg>
+            Back to history
+          </button>
+          <h2 id="splitDetail-restaurant" class="text-3xl font-normal mb-1 tracking-tight font-serif">Nobu</h2>
+          <p id="splitDetail-date" class="text-sm text-muted-foreground">May 26, 2026</p>
+        </div>
+        <button id="splitDetail-delete-btn" class="text-muted-foreground hover:text-destructive transition-colors px-2 py-1" aria-label="Delete split record">
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Detail Card -->
+      <div class="border rounded-xl overflow-hidden bg-card mb-6">
+        <div class="px-4 py-25 border-b bg-muted-30 flex justify-between">
+          <span class="text-xs uppercase tracking-widest text-muted-foreground font-mono">Overview</span>
+          <span id="splitDetail-total" class="text-sm font-semibold font-mono">$0.00</span>
+        </div>
+        <div id="splitDetail-people-list" class="divide-y">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Service Worker registration trigger -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker Registered successfully', reg.scope))
+          .catch(err => console.log('Service Worker registration failed', err));
+      });
+    }
+  </script>
+
+  <!-- App Core JS Modules -->
+  <script type="module" src="./js/app.js"></script>
+
+</body>
+</html>
