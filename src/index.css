@@ -104,6 +104,16 @@ textarea {
   min-height: 100vh;
 }
 
+.app-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-area-header {
+  top: env(safe-area-inset-top, 0px);
+}
+
 .max-w-xl {
   max-width: 36rem;
 }

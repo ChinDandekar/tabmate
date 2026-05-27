@@ -41,7 +41,7 @@ function Header() {
   ];
 
   return (
-    <header className="border-b bg-card-60 backdrop-blur-sm sticky top-[env(safe-area-inset-top)] z-10 pt-[env(safe-area-inset-top)]">
+    <header className="border-b bg-card-60 backdrop-blur-sm sticky safe-area-header z-10">
       <div className="max-w-xl mx-auto px-5 py-3 flex items-center justify-between">
         {/* Logo/Brand Button */}
         <button onClick={handleLogoClick} className="flex items-center gap-25 hover:opacity-90" aria-label="Go to Home Screen" id="header-logo-btn">
@@ -144,7 +144,7 @@ function MainRoutes() {
 
 export default function App() {
   return (
-    <div className="bg-background text-foreground min-h-screen flex flex-col pt-20">
+    <div className="app-shell bg-background text-foreground flex flex-col">
       <Header />
       <MainRoutes />
     </div>
