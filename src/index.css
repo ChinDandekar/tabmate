@@ -401,7 +401,10 @@ textarea {
   border-color: rgba(74, 103, 65, 0.25);
 }
 
-/* Borders & Rounding */
+@layer utilities {
+  .top-\[env\(safe-area-inset-top\)\] { top: env(safe-area-inset-top); }
+  .pt-\[env\(safe-area-inset-top\)\] { padding-top: env(safe-area-inset-top); }
+}
 .border {
   border: 1px solid var(--border);
 }
