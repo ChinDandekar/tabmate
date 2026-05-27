@@ -184,7 +184,7 @@ export const summaryScreen = {
 
           const itemShare = document.createElement('span');
           itemShare.className = 'text-xs text-muted-foreground ml-3 shrink-0 font-mono';
-          
+
           // Display the final item share price factor including proportional tip + tax multiplier!
           const itemSubtotalSum = this.computedPeople.reduce((sum, p) => sum + p.itemSubtotal, 0);
           const mult = itemSubtotalSum > 0 ? state.total / itemSubtotalSum : 1;
@@ -208,11 +208,10 @@ export const summaryScreen = {
       const sendBtn = document.createElement('button');
       const isSent = this.sentContacts.has(pt.contactId);
 
-      sendBtn.className = `w-full py-25 rounded-lg text-xs font-semibold flex items-center justify-center gap-15 transition-colors ${
-        isSent
+      sendBtn.className = `w-full py-25 rounded-lg text-xs font-semibold flex items-center justify-center gap-15 transition-colors ${isSent
           ? 'bg-accent-10 text-accent border border-accent-25'
           : 'bg-primary text-primary-foreground hover:opacity-90'
-      }`;
+        }`;
 
       if (isSent) {
         sendBtn.innerHTML = `
@@ -250,7 +249,7 @@ export const summaryScreen = {
     if (unassignedItems.length > 0) {
       unassignedCard.style.display = 'block';
       unassignedList.innerHTML = '';
-      
+
       unassignedItems.forEach(item => {
         const row = document.createElement('div');
         row.className = 'flex justify-between items-baseline';
@@ -271,7 +270,7 @@ export const summaryScreen = {
     const rest = state.restaurant || 'dinner';
 
     let body = `Hey ${person.name}! From ${rest} 🍽️\n`;
-    
+
     person.items.forEach(item => {
       if (item.sharedWith > 1) {
         body += `${item.name} (split ${item.sharedWith} ways) – ${formatCurrency(item.yourShare)}\n`;
@@ -300,7 +299,7 @@ export const summaryScreen = {
 
   completeSplit() {
     const state = this.app.splitState;
-    
+
     // Save to historical store
     store.saveSplit({
       restaurant: state.restaurant || 'Dinner Split',
