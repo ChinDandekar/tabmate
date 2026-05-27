@@ -46,7 +46,7 @@ export const store = {
       contacts.push({
         id: contact.id || generateId('c_'),
         name: contact.name.trim(),
-        phone: contact.phone.trim(),
+        phone: (contact.phone || '').trim(),
         splitCount: contact.splitCount || 0,
         color: contact.color || generateColor(contact.name, contacts.length),
       });
