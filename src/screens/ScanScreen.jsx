@@ -38,7 +38,7 @@ export default function ScanScreen() {
       });
 
       setSplitState({
-        restaurant: '',
+        restaurant: result.restaurant || '',
         items: result.items || [],
         people: [],
         taxPercent: result.tax && result.subtotal ? (result.tax / result.subtotal) * 100 : 8.875,
