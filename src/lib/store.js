@@ -1,10 +1,11 @@
-import { generateId, generateColor } from './utils.js';
+import { generateId, generateColor, formatPhone } from './utils.js';
 import { db } from './db.js';
 
 const KEYS = {
   settings: 'tabmate_settings',
   contacts: 'tabmate_contacts',
   splits: 'tabmate_splits',
+  activeSplit: 'tabmate_active_split',
 };
 
 const DEFAULT_SETTINGS = {
@@ -30,17 +31,32 @@ export const store = {
     return data || [];
   },
   async saveContact(contact) {
+    const normalizedName = (contact.name || '').trim();
+    const normalizedPhone = formatPhone(contact.phone || '');
+    if (!normalizedName) return await this.getContacts();
+
     const contacts = await this.getContacts();
-    const idx = contacts.findIndex((c) => c.id === contact.id);
+    const idx = contacts.findIndex((c) => {
+      if (contact.id && c.id === contact.id) return true;
+      const cPhone = formatPhone(c.phone || '');
+      if (normalizedPhone && cPhone) return cPhone === normalizedPhone;
+      return c.name.toLowerCase() === normalizedName.toLowerCase();
+    });
+
     if (idx >= 0) {
-      contacts[idx] = { ...contacts[idx], ...contact };
+      contacts[idx] = {
+        ...contacts[idx],
+        ...contact,
+        name: normalizedName,
+        phone: normalizedPhone || contacts[idx].phone || '',
+      };
     } else {
       contacts.push({
         id: contact.id || generateId('c_'),
-        name: contact.name.trim(),
-        phone: (contact.phone || '').trim(),
+        name: normalizedName,
+        phone: normalizedPhone || '',
         splitCount: contact.splitCount || 0,
-        color: contact.color || generateColor(contact.name, contacts.length),
+        color: contact.color || generateColor(normalizedName, contacts.length),
       });
     }
     await db.set(KEYS.contacts, contacts);
@@ -64,6 +80,38 @@ export const store = {
   async getContactsSortedByFrequency() {
     const contacts = await this.getContacts();
     return contacts.sort((a, b) => (b.splitCount || 0) - (a.splitCount || 0));
+  },
+  async addOrIncrementContact(contact) {
+    const name = (contact.name || '').trim();
+    if (!name) return null;
+    const phone = formatPhone(contact.phone || '');
+    const contacts = await this.getContacts();
+    const idx = contacts.findIndex((c) => {
+      const cPhone = formatPhone(c.phone || '');
+      if (phone && cPhone) return cPhone === phone;
+      return c.name.toLowerCase() === name.toLowerCase();
+    });
+
+    if (idx >= 0) {
+      contacts[idx] = {
+        ...contacts[idx],
+        phone: phone || contacts[idx].phone || '',
+        splitCount: (contacts[idx].splitCount || 0) + 1,
+      };
+      await db.set(KEYS.contacts, contacts);
+      return contacts[idx];
+    }
+
+    const newContact = {
+      id: contact.id || generateId('c_'),
+      name,
+      phone,
+      splitCount: 1,
+      color: contact.color || generateColor(name, contacts.length),
+    };
+    contacts.push(newContact);
+    await db.set(KEYS.contacts, contacts);
+    return newContact;
   },
 
   // Splits
@@ -107,5 +155,19 @@ export const store = {
     const filtered = splits.filter((s) => s.id !== id);
     await db.set(KEYS.splits, filtered);
     return filtered;
+  },
+
+  // Active split handoff state
+  async saveSplitState(splitState) {
+    await db.set(KEYS.activeSplit, {
+      ...splitState,
+      savedAt: Date.now(),
+    });
+  },
+  async loadSplitState() {
+    return (await db.get(KEYS.activeSplit)) || null;
+  },
+  async clearSplitState() {
+    await db.del(KEYS.activeSplit);
   },
 };

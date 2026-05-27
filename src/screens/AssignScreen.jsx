@@ -77,8 +77,6 @@ export default function AssignScreen() {
               <div className="px-4 py-3 flex flex-wrap gap-2">
                 {splitState.people.map(person => {
                   const isAssigned = item.assignedTo && item.assignedTo.includes(person.contactId);
-                  const splitCount = item.assignedTo ? item.assignedTo.length : 0;
-                  const perPersonShare = isAssigned && splitCount > 0 ? (item.price / splitCount).toFixed(2) : null;
 
                   return (
                     <button
@@ -108,9 +106,6 @@ export default function AssignScreen() {
                         )}
                       </div>
                       <span>{person.name}</span>
-                      {perPersonShare && splitCount > 1 && (
-                        <span className="opacity-65 ml-05 font-mono">${perPersonShare}</span>
-                      )}
                     </button>
                   );
                 })}

@@ -10,6 +10,7 @@ export default function SettingsScreen() {
   const [newContactName, setNewContactName] = useState('');
   const [newContactPhone, setNewContactPhone] = useState('');
   const [showGeminiKey, setShowGeminiKey] = useState(false);
+  const shortcutInstallUrl = `${window.location.origin}${window.location.pathname.replace(/\/$/, '')}/TabMate.shortcut`;
 
   useEffect(() => {
     async function init() {
@@ -139,6 +140,23 @@ export default function SettingsScreen() {
               </p>
             </div>
           </div>
+        </div>
+
+        <div className="border border-border rounded-xl p-4 bg-card flex flex-col gap-3">
+          <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-1">Contacts Shortcut</h3>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Install the TabMate Shortcut to add people directly from iPhone Contacts.
+          </p>
+          <a
+            href={shortcutInstallUrl}
+            className="w-full mt-1 bg-primary text-primary-foreground py-25 rounded-lg text-xs font-medium hover:opacity-90 transition-opacity text-center"
+          >
+            Install Shortcut
+          </a>
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            The Shortcut name must be exactly <span className="font-mono">Add to TabMate</span>. After install, use
+            <span className="font-mono"> Add from Contacts</span> on the People screen.
+          </p>
         </div>
 
         <div className="border border-border rounded-xl p-4 bg-card flex flex-col gap-3">

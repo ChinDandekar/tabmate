@@ -87,3 +87,19 @@ export function isValidPhone(phone) {
   const digits = phone.replace(/\D/g, '');
   return digits.length === 10 || (digits.length === 11 && digits[0] === '1');
 }
+
+export function getShortcutPayloadFromLocation() {
+  const hash = window.location.hash || '';
+  const queryIndex = hash.indexOf('?');
+  const search = queryIndex >= 0 ? hash.slice(queryIndex + 1) : '';
+  const params = new URLSearchParams(search);
+  const source = params.get('source');
+  const name = (params.get('name') || '').trim();
+  const phone = (params.get('phone') || '').trim();
+
+  if (source !== 'shortcut' || !name) {
+    return null;
+  }
+
+  return { source, name, phone };
+}

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { useSplit } from './context/SplitContext';
 import { store } from './lib/store';
+import { formatPhone, generateColor, generateId, getShortcutPayloadFromLocation } from './lib/utils';
 import HomeScreen from './screens/HomeScreen';
 import ScanScreen from './screens/ScanScreen';
 import EditItemsScreen from './screens/EditItemsScreen';
@@ -111,9 +112,54 @@ function Header() {
 function MainRoutes() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { setSplitState } = useSplit();
 
   useEffect(() => {
     async function init() {
+      const shortcutPayload = getShortcutPayloadFromLocation();
+      if (shortcutPayload) {
+        const savedSplit = await store.loadSplitState();
+        if (!savedSplit) {
+          alert("Your split couldn't be restored. Start a new one.");
+          navigate('/home', { replace: true });
+          return;
+        }
+
+        const normalizedPhone = formatPhone(shortcutPayload.phone);
+        const alreadyAdded = (savedSplit.people || []).some(
+          (p) => {
+            const savedPhone = formatPhone(p.phone || '');
+            if (normalizedPhone && savedPhone) return normalizedPhone === savedPhone;
+            return p.name.toLowerCase() === shortcutPayload.name.toLowerCase();
+          }
+        );
+        const nextPeople = alreadyAdded
+          ? savedSplit.people
+          : [
+              ...(savedSplit.people || []),
+              {
+                contactId: generateId('c_'),
+                name: shortcutPayload.name,
+                phone: normalizedPhone || '',
+                color: generateColor(shortcutPayload.name, (savedSplit.people || []).length),
+              },
+            ];
+
+        setSplitState({
+          ...savedSplit,
+          people: nextPeople,
+        });
+
+        await store.addOrIncrementContact({
+          name: shortcutPayload.name,
+          phone: normalizedPhone || '',
+        });
+
+        await store.clearSplitState();
+        navigate('/people', { replace: true });
+        return;
+      }
+
       const settings = await store.getSettings();
       if (!settings.venmo && !settings.zelle) {
         if (location.pathname !== '/settings') {
@@ -124,7 +170,7 @@ function MainRoutes() {
       }
     }
     init();
-  }, [navigate, location]);
+  }, [navigate, location, setSplitState]);
 
   return (
     <main className="max-w-xl mx-auto px-5 py-8 pb-16">

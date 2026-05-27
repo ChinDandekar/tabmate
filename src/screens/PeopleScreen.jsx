@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSplit } from '../context/SplitContext';
 import { store } from '../lib/store';
-import { getInitials, generateColor } from '../lib/utils';
+import { getInitials, generateColor, formatPhone } from '../lib/utils';
 
 export default function PeopleScreen() {
   const navigate = useNavigate();
@@ -43,14 +43,26 @@ export default function PeopleScreen() {
     init();
   }, []);
 
-  const handleAddPerson = (e) => {
+  const refreshFrequentContacts = async () => {
+    const contacts = await store.getContactsSortedByFrequency();
+    setFrequentContacts(contacts);
+  };
+
+  const isSamePerson = (aName, aPhone, bName, bPhone) => {
+    const leftPhone = formatPhone(aPhone || '');
+    const rightPhone = formatPhone(bPhone || '');
+    if (leftPhone && rightPhone) return leftPhone === rightPhone;
+    return (aName || '').trim().toLowerCase() === (bName || '').trim().toLowerCase();
+  };
+
+  const handleAddPerson = async (e) => {
     if (e && e.key && e.key !== 'Enter') return;
     const trimmedName = name.trim();
-    const trimmedPhone = phone.trim();
+    const normalizedPhone = formatPhone(phone.trim());
 
     if (!trimmedName) return;
 
-    if (splitState.people.some(p => p.name.toLowerCase() === trimmedName.toLowerCase())) {
+    if (splitState.people.some((p) => isSamePerson(p.name, p.phone, trimmedName, normalizedPhone))) {
       alert(`${trimmedName} is already added to this split.`);
       return;
     }
@@ -58,7 +70,7 @@ export default function PeopleScreen() {
     const newPerson = {
       contactId: `c_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
       name: trimmedName,
-      phone: trimmedPhone || '',
+      phone: normalizedPhone || '',
       color: generateColor(trimmedName, splitState.people.length)
     };
 
@@ -66,6 +78,13 @@ export default function PeopleScreen() {
       ...prev,
       people: [...prev.people, newPerson]
     }));
+
+    await store.saveContact({
+      name: trimmedName,
+      phone: normalizedPhone || '',
+      color: newPerson.color
+    });
+    await refreshFrequentContacts();
 
     setName('');
     setPhone('');
@@ -83,9 +102,9 @@ export default function PeopleScreen() {
   };
 
   const handleToggleFrequentPerson = (contact) => {
-    const isSelected = splitState.people.some(p => p.name.toLowerCase() === contact.name.toLowerCase());
+    const isSelected = splitState.people.some((p) => isSamePerson(p.name, p.phone, contact.name, contact.phone));
     if (isSelected) {
-      const target = splitState.people.find(p => p.name.toLowerCase() === contact.name.toLowerCase());
+      const target = splitState.people.find((p) => isSamePerson(p.name, p.phone, contact.name, contact.phone));
       if (target) {
         handleRemovePerson(target.contactId);
       }
@@ -105,11 +124,16 @@ export default function PeopleScreen() {
     }
   };
 
+  const handleOpenContactPicker = async () => {
+    await store.saveSplitState(splitState);
+    window.location.href = 'shortcuts://run-shortcut?name=Add%20to%20TabMate';
+  };
+
   const handleNext = async () => {
     // Save participants to database if they don't exist
+    const contacts = await store.getContacts();
     for (const p of splitState.people) {
-      const contacts = await store.getContacts();
-      const exists = contacts.some(c => c.name.toLowerCase() === p.name.toLowerCase());
+      const exists = contacts.some((c) => isSamePerson(c.name, c.phone, p.name, p.phone));
       if (!exists) {
         await store.saveContact({
           name: p.name,
@@ -164,13 +188,29 @@ export default function PeopleScreen() {
         </div>
 
         <div className="flex flex-col gap-2">
+          <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground">In your crew</h3>
+          <button
+            onClick={handleOpenContactPicker}
+            className="w-full border border-border py-25 rounded-lg text-xs font-medium hover:bg-muted transition-colors flex items-center justify-center gap-2"
+            id="add-from-contacts-btn"
+          >
+            <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 18a4 4 0 0 0-8 0"/>
+              <circle cx="12" cy="11" r="3"/>
+              <rect width="18" height="18" x="3" y="3" rx="2"/>
+            </svg>
+            Add from Contacts
+          </button>
+        </div>
+
+        <div className="flex flex-col gap-2">
           <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Frequent crew</h3>
           <div id="frequent-contacts-picker" className="flex flex-wrap gap-2 py-1">
             {frequentContacts.length === 0 ? (
               <span className="text-xs text-muted-foreground italic">No saved contacts yet. They will save automatically.</span>
             ) : (
               frequentContacts.map(contact => {
-                const isSelected = splitState.people.some(p => p.name.toLowerCase() === contact.name.toLowerCase());
+                const isSelected = splitState.people.some((p) => isSamePerson(p.name, p.phone, contact.name, contact.phone));
                 return (
                   <button
                     key={contact.id}
