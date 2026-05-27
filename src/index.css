@@ -669,8 +669,32 @@ input {
   color: var(--foreground);
 }
 
-input:focus {
+input:focus,
+textarea:focus {
   outline: none;
+}
+
+textarea {
+  border: none;
+  color: var(--foreground);
+}
+
+.resize-none {
+  resize: none;
+}
+
+.border-t-accent {
+  border-top-color: var(--accent);
+}
+
+.animate-spin {
+  animation: tabmate-spin 0.8s linear infinite;
+}
+
+@keyframes tabmate-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .placeholder\:text-muted-foreground\/40::placeholder {

@@ -5,10 +5,11 @@ import { getInitials } from '../lib/utils';
 
 export default function SettingsScreen() {
   const navigate = useNavigate();
-  const [ownerSettings, setOwnerSettings] = useState({ name: '', venmo: '', zelle: '' });
+  const [ownerSettings, setOwnerSettings] = useState({ name: '', venmo: '', zelle: '', geminiApiKey: '' });
   const [contacts, setContacts] = useState([]);
   const [newContactName, setNewContactName] = useState('');
   const [newContactPhone, setNewContactPhone] = useState('');
+  const [showGeminiKey, setShowGeminiKey] = useState(false);
 
   useEffect(() => {
     async function init() {
@@ -110,6 +111,32 @@ export default function SettingsScreen() {
                 onChange={(e) => setOwnerSettings({ ...ownerSettings, zelle: e.target.value })}
                 onBlur={(e) => handleOwnerChange('zelle', e.target.value)}
               />
+            </div>
+            <div className="flex flex-col gap-15">
+              <label htmlFor="settings-gemini-api-key" className="text-[10px] uppercase font-mono text-muted-foreground tracking-wider">Gemini API Key</label>
+              <div className="flex gap-2">
+                <input
+                  id="settings-gemini-api-key"
+                  type={showGeminiKey ? 'text' : 'password'}
+                  placeholder="AIza..."
+                  className="w-full flex-1 bg-secondary text-sm px-4 py-25 rounded-md focus:ring-1 focus:ring-accent font-mono"
+                  value={ownerSettings.geminiApiKey}
+                  onChange={(e) => setOwnerSettings({ ...ownerSettings, geminiApiKey: e.target.value })}
+                  onBlur={(e) => handleOwnerChange('geminiApiKey', e.target.value)}
+                  autoComplete="off"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowGeminiKey((shown) => !shown)}
+                  className="shrink-0 px-3 py-25 rounded-md border border-border text-xs font-medium hover:bg-muted transition-colors"
+                  aria-label={showGeminiKey ? 'Hide Gemini API key' : 'Show Gemini API key'}
+                >
+                  {showGeminiKey ? 'Hide' : 'Show'}
+                </button>
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                Used to parse pasted receipts. Get a free key at aistudio.google.com.
+              </p>
             </div>
           </div>
         </div>

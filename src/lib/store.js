@@ -7,11 +7,18 @@ const KEYS = {
   splits: 'tabmate_splits',
 };
 
+const DEFAULT_SETTINGS = {
+  name: '',
+  venmo: '',
+  zelle: '',
+  geminiApiKey: '',
+};
+
 export const store = {
   // Settings
   async getSettings() {
     const data = await db.get(KEYS.settings);
-    return data || { venmo: '', zelle: '', name: '' };
+    return { ...DEFAULT_SETTINGS, ...(data || {}) };
   },
   async saveSettings(obj) {
     await db.set(KEYS.settings, obj);
